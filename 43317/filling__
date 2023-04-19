@@ -1,0 +1,130 @@
+
+#include <iostream>
+#include <GL/gl.h>
+#include <GL/freeglut.h>
+
+using namespace std;
+
+struct color
+{
+  GLubyte r, g, b;
+};
+
+void setPixel(GLint x, GLint y)
+{
+  glBegin(GL_POINTS);
+  glVertex2i(x, y);
+  glEnd();
+}
+
+void putpixel(int x, int y, color c)
+{
+  glPointSize(1.0);
+  glColor3ub(c.r, c.g, c.b);
+  glBegin(GL_POINTS);
+  glVertex2i(x, y);
+  glEnd();
+  glFlush();
+}
+
+void boundaryfill(int x, int y, color b, color f)
+{
+  color c;
+
+  glReadPixels(x, y, 1, 1, GL_RGB, GL_UNSIGNED_BYTE, &c);
+	cout<<(int)c.r<<" "<<(int)c.g<<" "<<(int)c.b<<endl;
+  if ((c.r != b.r || c.b != b.b || c.g != b.g) && (c.r != f.r || c.b != f.b || c.g != f.g))
+  {
+    putpixel(x, y, f);
+    boundaryfill(x + 1, y, f, b);
+    boundaryfill(x - 1, y, f, b);
+    boundaryfill(x, y + 1, f, b);
+    boundaryfill(x, y - 1, f, b);
+  }
+}
+
+// void draw_line(float x1, float y1, float x2, float y2)
+// {
+//   glBegin(GL_LINES);
+//   glVertex2f(x1, y1);
+//   glVertex2f(x2, y2);
+//   glEnd();
+// }
+
+void breshnam_circle(GLfloat r, GLfloat p, GLfloat q)
+{
+  float x, y, d;
+
+  d = 3 - (2 * r); // Initial desicion parameter
+
+  x = 0;
+  y = r;
+
+  while (x <= y)
+  {
+    glPointSize(2);
+    setPixel(p + x, q + y);
+    setPixel(p + y, q + x);
+    setPixel(p + x, q - y);
+    setPixel(p - y, q + x);
+    setPixel(p - x, q - y);
+    setPixel(p - y, q - x);
+    setPixel(p - x, q + y);
+    setPixel(p + y, q - x);
+
+    if (d <= 0)
+    {
+      d += (4 * x + 6);
+    }
+    else
+    {
+      d += (4 * (x - y) + 10);
+      y--;
+    }
+    x++;
+  }
+  glFlush();
+}
+
+void menu()
+{
+  GLfloat r, p, q;
+  p = 0; q= 0; r = 225;
+  breshnam_circle(r, p + 250, q + 250);
+  color b = {255, 0, 0};
+  color f = {0, 0, 153};
+  boundaryfill(250, 348, b, f);
+
+  glFlush();
+}
+
+void draw()
+{
+  glClear(GL_COLOR_BUFFER_BIT);
+
+  menu();
+
+  glFlush();
+}
+
+void init()
+{
+  glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);
+  glutInitWindowPosition(900, 250);
+  glutInitWindowSize(500, 500);
+  glutCreateWindow("Green Window");
+  glClearColor(1.0, 1.0, 0.0, 0);
+  glColor3f(1.0, 0.0, 0.0);
+  gluOrtho2D(0, 500, 0, 500);
+}
+
+int main(int argc, char **argv)
+{
+  glutInit(&argc, argv);
+
+  init();
+
+  glutDisplayFunc(draw);
+  glutMainLoop();
+  return 0;
+}
